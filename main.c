@@ -2,14 +2,12 @@
 #include <stdlib.h>
 #include "hangman.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
     FILE *stream;
     int attemps;
 
-    if (argc > 1)
-    {
+    if (argc > 1) {
         stream = fopen(argv[1], "r");
         attemps = atoi(argv[2]);
     } else {
