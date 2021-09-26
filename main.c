@@ -21,8 +21,7 @@ int main(int argc, char *argv[]) {
     //Creo juego
     int gameCreationError = hangman_createGame(&hangman, attemps);
 
-    while (1)
-    {
+    while (1) {
         char letter;
         printf("Palabra secreta: %s\n", hangman_getDisplayWord(&hangman, 0));
         printf("Te quedan %d intentos:\n", hangman_gameAttempsLeft(&hangman, 0));

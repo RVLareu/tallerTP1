@@ -4,8 +4,8 @@
 
 
 int hangman_init(hangman_t *self, FILE *stream) {
-    self->victorias = 0;
-    self->derrotas = 0;
+    self->victories = 0;
+    self->defeats = 0;
     self->positionInArray = 0;
     self->stream = stream;
     lineReader_init(&self->lineReader, stream);
@@ -24,7 +24,10 @@ int hangman_uninit(hangman_t *self) {
 int hangman_createGame(hangman_t *self, int attemps) {
     game_t game;
 
-    lineReader_readLine(&self->lineReader);
+    int err = lineReader_readLine(&self->lineReader);
+    if (err == -1) {
+        return -1;
+    }
     char* line = lineReader_sendLine(&self->lineReader);
     game_init(&game, line, attemps, self->positionInArray);
 
@@ -37,10 +40,10 @@ int hangman_guessLetter(hangman_t *self, int gameID, char letter) {
     
     int guess = game_guessLetter(&self->games[gameID], letter);
     if (guess == 2) {
-        self->victorias ++;
+        self->defeats ++;
     }
     if (guess == 3) {
-        self->derrotas ++;
+        self->victories ++;
     }
     
     return guess;
@@ -56,4 +59,16 @@ int hangman_gameAttempsLeft(hangman_t *self, int gameID) {
 
 char *hangman_getGameWord(hangman_t *self, int gameID) {
     return game_getWord(&self->games[gameID]);
+}
+
+int hangman_getActualGameID(hangman_t *self) {
+    return self->positionInArray - 1;
+}
+
+int hangman_getDefeats(hangman_t * self) {
+    return self->defeats;
+}
+
+int hangman_getVictories(hangman_t * self) {
+    return self->victories;
 }

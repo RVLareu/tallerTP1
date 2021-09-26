@@ -4,8 +4,8 @@
 
 typedef struct {
 
-    int victorias;
-    int derrotas;
+    int victories;
+    int defeats;
     int positionInArray;
     game_t games[1000];
     FILE* stream;
@@ -25,3 +25,6 @@ int hangman_guessLetter(hangman_t *self, int gameID, char letter);
 char* hangman_getDisplayWord(hangman_t *self, int gameID);
 int hangman_gameAttempsLeft(hangman_t *self, int gameID);
 char *hangman_getGameWord(hangman_t *self, int gameID);
+int hangman_getActualGameID(hangman_t *self);
+int hangman_getDefeats(hangman_t * self);
+int hangman_getVictories(hangman_t * self);

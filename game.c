@@ -7,20 +7,17 @@
 #define END_GAME_WIN 3
 
 int game_init(game_t *self, char *word, int attemps, int id) {
+    strtok(word, "\n");
     self->word = word;
     self->attemps = attemps;
     self->id = id;
-
-    int lenWord = strlen(self->word) - 1;
+    int lenWord = strlen(word);
+    //ESTO HACE QUILOMBO EN VALGRIND
     self->displayWord = (char *)malloc(sizeof(char)*lenWord);
-
-    
     for (int i = 0; i < lenWord; i++ ) {
-        
         self->displayWord[i] = '_';
-        
-        
     }
+    printf("WORD:%s", word);
     return 0;
 }
 
@@ -30,9 +27,8 @@ int game_uninit(game_t *self) {
 }
 
 int game_guessLetter(game_t *self, char letter) {
-
     int present = 0;
-    for(int i = 0; i < strlen(self->word) - 1; i++) {
+    for(int i = 0; i < strlen(self->word); i++) {
         if (self->word[i] == letter) {
             
             present = 1;
