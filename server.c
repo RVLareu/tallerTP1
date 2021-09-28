@@ -71,16 +71,24 @@ int main(int argc, char* argv[]) {
         int gameID = hangman_getActualGameID(&hangman);
 
         /*------PRIMER MENSAJE AL CLIENTE CON JUEGO--------*/
-        char sendBuff[40];
+        
         char* display_word = hangman_getDisplayWord(&hangman, gameID);
         int attemps_left = hangman_gameAttempsLeft(&hangman, gameID);
-        snprintf(sendBuff, sizeof(sendBuff), "La palabra es: %s\n te quedan %d intentos\n", display_word, attemps_left);
-
+        unsigned char attempsLeftBinary;
+        attempsLeftBinary = (unsigned char)attemps_left;
+        
+        short wordLen = (short)strlen(display_word);
+        wordLen = wordLen | 0x0000;
+        
+        char sendBuff[sizeof(char)*wordLen + sizeof(unsigned char) + sizeof(char)];
+        snprintf(sendBuff, sizeof(sendBuff), "%u%hi%s", attemps_left, wordLen , display_word);
+        printf("SEND: %s", sendBuff);
         s = socket_send(&peersocket, sendBuff, sizeof(sendBuff));
         if (s == -1) {
             printf("Error: %s\n", strerror(errno));
             return 1;
         }
+
 
         /*------JUEGO EN DESARROLLO--------*/
         while(1) {
@@ -96,14 +104,12 @@ int main(int argc, char* argv[]) {
 
             /*------ADIVINO EN HANGMAN CON LETRA DEL CLIENTE--------*/
             int guess = hangman_guessLetter(&hangman, gameID, buffer[0]);
-            char sendBuff[40];
-            snprintf(sendBuff, sizeof(sendBuff), "\nLa palabra es: %s\n te quedan %d intentos\n", hangman_getDisplayWord(&hangman, gameID), hangman_gameAttempsLeft(&hangman, gameID));
-            if (guess == 2) {
-                char *secretWord = hangman_getGameWord(&hangman, gameID);
-                snprintf(sendBuff, sizeof(sendBuff), "\nPerdiste! La palabra secreta era: '%s'\n", secretWord);
-            } else if (guess == 3) {
-                snprintf(sendBuff, sizeof(sendBuff), "\nGanaste!!\n");
-            }
+            char* display_word = hangman_getDisplayWord(&hangman, gameID);
+            int attemps_left = hangman_gameAttempsLeft(&hangman, gameID);
+            int wordLen = strlen(display_word);
+            char sendBuff[sizeof(display_word) + sizeof(attemps_left) + sizeof(wordLen)];
+            snprintf(sendBuff, sizeof(sendBuff), "%d%d%s", attemps_left, wordLen , display_word);
+
             
             /*------ENVIO ESTADO ACTUALIZADO CON ADIVINANZA DEL CLIENTE--------*/
             s = socket_send(&peersocket, sendBuff, sizeof(sendBuff));
@@ -128,5 +134,6 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 }
+
 
 

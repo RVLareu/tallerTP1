@@ -17,7 +17,6 @@ int game_init(game_t *self, char *word, int attemps, int id) {
     for (int i = 0; i < lenWord; i++ ) {
         self->displayWord[i] = '_';
     }
-    printf("WORD:%s", word);
     return 0;
 }
 

@@ -53,8 +53,8 @@ int main(int argc, char* argv[]) {
     printf("CLIENT SOCKET CONNECTED.\n");
 
     /*------PRIMER MENSAJE DEL SERVIDOR CON JUEGO--------*/
-    char recvBuffer[40] = "";
-    s = socket_receive(&socket, recvBuffer, sizeof(recvBuffer));
+    unsigned char attempsLeft[1] = "";
+    s = socket_receive(&socket, attempsLeft, sizeof(unsigned char));
     if (s == -1) {
         return 1;
     } 
@@ -62,39 +62,55 @@ int main(int argc, char* argv[]) {
         printf("CLIENT SOCKET CLOSED.\n");
         return 1;
     } else {
-        printf("MENSAJE RECIBIDO DEL SERVER: %s\n", recvBuffer);
+        printf("MENSAJE RECIBIDO DEL SERVER ATTEMPS: %s\n", attempsLeft);
     }
+    unsigned char wordLen[1] = "";
+    s = socket_receive(&socket, wordLen, sizeof(char));
+    printf("MENSAJE RECIBIDO DEL SERVER WORDLEN: %s\n", wordLen);
+    
+    char displayWord[sizeof(char)*atoi(wordLen)];
+    s = socket_receive(&socket, displayWord, sizeof(char)*atoi(wordLen));
+    printf("MENSAJE RECIBIDO DEL SERVER: %s\n", displayWord);
+
 
     /*------SENDING--------*/
     while(1) {
         char recvBuffer[40] = "";
-        char buffer[1] = "";    
+        char buffer[20] = "";    
         scanf("%s", buffer);
-        
-        ssize_t s = socket_send(&socket, buffer, sizeof(buffer));
-        if (s == -1) {
-            printf("Error: %s\n", strerror(errno));
-            is_there_a_socket_error = true;
-        }
-        if (is_there_a_socket_error) {
-            shutdown(skt, SHUT_RDWR);
-            close(skt);
-            return 1;
-        } else {
-            printf("MENSAJE ENVIADO CORRECTAMENTE\n");
-        }
+        for (int i = 0; i < strlen(buffer); i++) {
+            ssize_t s = socket_send(&socket, &buffer[i], sizeof(char));
+            if (s == -1) {
+                printf("Error: %s\n", strerror(errno));
+                is_there_a_socket_error = true;
+            }
+            if (is_there_a_socket_error) {
+                shutdown(skt, SHUT_RDWR);
+                close(skt);
+                return 1;
+            } else {
+                printf("MENSAJE ENVIADO CORRECTAMENTE\n");
+            }
 
-        s = socket_receive(&socket, recvBuffer, sizeof(recvBuffer));
+        unsigned char attempsLeft[1] = "";
+        s = socket_receive(&socket, attempsLeft, sizeof(unsigned char));
         if (s == -1) {
             return 1;
         } 
         if (s == 1) { 
             printf("CLIENT SOCKET CLOSED.\n");
-            break;
+            return 1;
         } else {
-            printf("MENSAJE RECIBIDO DEL SERVER: %s\n", recvBuffer);
+            printf("MENSAJE RECIBIDO DEL SERVER ATTEMPS: %s\n", attempsLeft);
         }
-
+        unsigned char wordLen[1] = "";
+        s = socket_receive(&socket, wordLen, sizeof(char));
+        printf("MENSAJE RECIBIDO DEL SERVER WORDLEN: %s\n", wordLen);
+        
+        char displayWord[sizeof(char)*atoi(wordLen)];
+        s = socket_receive(&socket, displayWord, sizeof(char)*atoi(wordLen));
+        printf("MENSAJE RECIBIDO DEL SERVER: %s\n", displayWord);
+            }
     }
     close(skt);                                                                                                    
     printf("CLIENT SOCKET CLOSED\n");
