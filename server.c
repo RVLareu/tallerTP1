@@ -73,49 +73,71 @@ int main(int argc, char* argv[]) {
         /*------PRIMER MENSAJE AL CLIENTE CON JUEGO--------*/
         
         char* display_word = hangman_getDisplayWord(&hangman, gameID);
-        int attemps_left = hangman_gameAttempsLeft(&hangman, gameID);
-        unsigned char attempsLeftBinary;
-        attempsLeftBinary = (unsigned char)attemps_left;
+        unsigned short lenWord = strlen(display_word);
+        unsigned char attemps_left = hangman_gameAttempsLeft(&hangman, gameID);
         
-        short wordLen = (short)strlen(display_word);
-        wordLen = wordLen | 0x0000;
+        char sendBuff[strlen(display_word)*sizeof(char) + sizeof(unsigned short) + sizeof(unsigned char)];
         
-        char sendBuff[sizeof(char)*wordLen + sizeof(unsigned char) + sizeof(char)];
-        snprintf(sendBuff, sizeof(sendBuff), "%u%hi%s", attemps_left, wordLen , display_word);
-        printf("SEND: %s", sendBuff);
-        s = socket_send(&peersocket, sendBuff, sizeof(sendBuff));
-        if (s == -1) {
-            printf("Error: %s\n", strerror(errno));
-            return 1;
+        memcpy(&sendBuff[0], &attemps_left,1);
+        lenWord = htons(lenWord);
+        memcpy(&sendBuff[1], &lenWord, 2);
+        for (int i = 0; i < strlen(display_word); i++) {
+            memcpy(&sendBuff[3+i], &display_word[i], 1);
         }
-
+        
+        int bytes_sent = 0;
+        while (bytes_sent < (strlen(display_word)*sizeof(char) + sizeof(unsigned short) + sizeof(unsigned char))) {
+            s = socket_send(&peersocket, &sendBuff[bytes_sent], sizeof(char));
+            if (s == -1) {
+                printf("Error: %s\n", strerror(errno));
+                return 1;
+            } else {
+                bytes_sent +=1;
+            }
+        }
 
         /*------JUEGO EN DESARROLLO--------*/
         while(1) {
             /*------RECIBO PALABRA DEL CLIENTE--------*/
             char buffer[1];
-            s = socket_receive(&peersocket, buffer, sizeof(buffer));
-            if (s == -1) {
-                return 1;
-            } 
-            if (s == 1) { 
-                break;
+            int bytes_receive = 0;
+            while (bytes_receive < 1){
+                s = socket_receive(&peersocket, buffer, sizeof(char));
+                if (s == -1) {
+                    return 1;
+                } 
+                if (s == 1) { 
+                    break;
+                } else {
+                    bytes_receive +=1;
+                }
             }
 
             /*------ADIVINO EN HANGMAN CON LETRA DEL CLIENTE--------*/
             int guess = hangman_guessLetter(&hangman, gameID, buffer[0]);
             char* display_word = hangman_getDisplayWord(&hangman, gameID);
-            int attemps_left = hangman_gameAttempsLeft(&hangman, gameID);
-            int wordLen = strlen(display_word);
-            char sendBuff[sizeof(display_word) + sizeof(attemps_left) + sizeof(wordLen)];
-            snprintf(sendBuff, sizeof(sendBuff), "%d%d%s", attemps_left, wordLen , display_word);
-
-            
-            /*------ENVIO ESTADO ACTUALIZADO CON ADIVINANZA DEL CLIENTE--------*/
-            s = socket_send(&peersocket, sendBuff, sizeof(sendBuff));
-            if (s == -1) {
-                printf("Error: %s\n", strerror(errno));
-                return 1;           
+            unsigned short lenWord = strlen(display_word);
+            unsigned char attemps_left = hangman_gameAttempsLeft(&hangman, gameID);
+            char sendBuff[strlen(display_word)*sizeof(char) + sizeof(unsigned short) + sizeof(unsigned char)];
+            if (guess == 2 || guess == 3) {
+                attemps_left = attemps_left | 0x80;
+                display_word = hangman_getGameWord(&hangman, gameID);
+            }
+            memcpy(&sendBuff[0], &attemps_left,1);
+            lenWord = htons(lenWord);
+            memcpy(&sendBuff[1], &lenWord, 2);
+            for (int i = 0; i < strlen(display_word); i++) {
+                memcpy(&sendBuff[3+i], &display_word[i], 1);
+            }
+            bytes_sent = 0;
+            while (bytes_sent < sizeof(sendBuff)) {
+                s = socket_send(&peersocket, &sendBuff[bytes_sent], sizeof(char));
+                if (s == -1) {
+                    printf("Error: %s\n", strerror(errno));
+                    return 1;
+                } else {
+                    bytes_sent += 1;
+                }
             }
         }
     }       
@@ -134,6 +156,5 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 }
-
 
 

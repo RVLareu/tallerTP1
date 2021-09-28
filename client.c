@@ -1,3 +1,4 @@
+
 #include <sys/types.h>                                                                                                   
 #include <sys/socket.h>                                                                                              
 #include <netdb.h>                                                                                                          
@@ -9,7 +10,7 @@
 #include <stdbool.h>
 
 #include "socket.h"
-#include "calculator.h"
+
 
 int main(int argc, char* argv[]) {
 
@@ -53,67 +54,154 @@ int main(int argc, char* argv[]) {
     printf("CLIENT SOCKET CONNECTED.\n");
 
     /*------PRIMER MENSAJE DEL SERVIDOR CON JUEGO--------*/
-    unsigned char attempsLeft[1] = "";
-    s = socket_receive(&socket, attempsLeft, sizeof(unsigned char));
-    if (s == -1) {
-        return 1;
-    } 
-    if (s == 1) { 
-        printf("CLIENT SOCKET CLOSED.\n");
-        return 1;
-    } else {
-        printf("MENSAJE RECIBIDO DEL SERVER ATTEMPS: %s\n", attempsLeft);
-    }
-    unsigned char wordLen[1] = "";
-    s = socket_receive(&socket, wordLen, sizeof(char));
-    printf("MENSAJE RECIBIDO DEL SERVER WORDLEN: %s\n", wordLen);
-    
-    char displayWord[sizeof(char)*atoi(wordLen)];
-    s = socket_receive(&socket, displayWord, sizeof(char)*atoi(wordLen));
-    printf("MENSAJE RECIBIDO DEL SERVER: %s\n", displayWord);
 
+    int bytes_receive = 0;
+    char attemp;
+    while (bytes_receive < 1) {
+        s = socket_receive(&socket, &attemp, sizeof(unsigned char));
+        if (s == -1) {
+            printf("Error: %s\n", strerror(errno));
+        } else {
+            bytes_receive += 1;
+        }
+    }
+    int a = (int) attemp & 0x7F;
+    
+
+    bytes_receive = 0;
+    char len1;
+    char len2;
+    while (bytes_receive < 1) {
+        s = socket_receive(&socket, &len1, sizeof(char));
+        if (s == -1) {
+            printf("Error: %s\n", strerror(errno));
+        } else {
+            bytes_receive += 1;
+        }
+    }
+    bytes_receive = 0;
+    while (bytes_receive < 1) {
+        s = socket_receive(&socket, &len2, sizeof(char));
+        if (s == -1) {
+            printf("Error: %s\n", strerror(errno));
+        } else {
+            bytes_receive += 1;
+        }
+    }
+    short len = (((short) len1)<<8) | len2;
+
+    char word[len];
+    bytes_receive = 0;
+    while (bytes_receive < len) {
+        s = socket_receive(&socket, &word[bytes_receive], sizeof(char));
+        if (s == -1) {
+            printf("Error: %s\n", strerror(errno));
+        } else {
+            bytes_receive += 1;
+        }
+    }
+    printf("Palabra secreta: %s\n", word);
+    printf("Te quedan %d intentos\n", a);
+    printf("Ingrese letra:");
 
     /*------SENDING--------*/
-    while(1) {
-        char recvBuffer[40] = "";
-        char buffer[20] = "";    
-        scanf("%s", buffer);
+    bool playing = true;
+    while(playing) {
+
+        char buffer[1] = "";    
+        int error = scanf("%s", buffer);
+        if (error != 2) {
+            return 1;
+        }
+            
+        
+        
         for (int i = 0; i < strlen(buffer); i++) {
-            ssize_t s = socket_send(&socket, &buffer[i], sizeof(char));
-            if (s == -1) {
-                printf("Error: %s\n", strerror(errno));
-                is_there_a_socket_error = true;
-            }
-            if (is_there_a_socket_error) {
-                shutdown(skt, SHUT_RDWR);
-                close(skt);
-                return 1;
-            } else {
-                printf("MENSAJE ENVIADO CORRECTAMENTE\n");
+            int bytes_sent = 0;
+            while (bytes_sent < 1) {
+                ssize_t s = socket_send(&socket, &buffer[i], sizeof(char));
+                if (s == -1) {
+                    printf("Error: %s\n", strerror(errno));
+                    is_there_a_socket_error = true;
+                }
+                if (is_there_a_socket_error) {
+                    socket_uninit(&socket);  
+                    return 1;
+                } else {
+                    bytes_sent += 1;
+                }
             }
 
-        unsigned char attempsLeft[1] = "";
-        s = socket_receive(&socket, attempsLeft, sizeof(unsigned char));
-        if (s == -1) {
-            return 1;
-        } 
-        if (s == 1) { 
-            printf("CLIENT SOCKET CLOSED.\n");
-            return 1;
-        } else {
-            printf("MENSAJE RECIBIDO DEL SERVER ATTEMPS: %s\n", attempsLeft);
-        }
-        unsigned char wordLen[1] = "";
-        s = socket_receive(&socket, wordLen, sizeof(char));
-        printf("MENSAJE RECIBIDO DEL SERVER WORDLEN: %s\n", wordLen);
-        
-        char displayWord[sizeof(char)*atoi(wordLen)];
-        s = socket_receive(&socket, displayWord, sizeof(char)*atoi(wordLen));
-        printf("MENSAJE RECIBIDO DEL SERVER: %s\n", displayWord);
+
+
+
+            char attemp;
+            bytes_receive = 0;
+            while (bytes_receive < 1) {
+                s = socket_receive(&socket, &attemp, sizeof(unsigned char));
+                if (s == -1) {
+                    printf("Error: %s\n", strerror(errno));
+                } else {
+                    bytes_receive += 1;
+                }
             }
+            bytes_receive = 0;
+            char len1;
+            char len2;
+            while (bytes_receive < 1) {
+                s = socket_receive(&socket, &len1, sizeof(char));
+                if (s == -1) {
+                    printf("Error: %s\n", strerror(errno));
+                } else {
+                    bytes_receive += 1;
+                }
+            }
+            bytes_receive = 0;
+            while (bytes_receive < 1) {
+                s = socket_receive(&socket, &len2, sizeof(char));
+                if (s == -1) {
+                    printf("Error: %s\n", strerror(errno));
+                } else {
+                    bytes_receive += 1;
+                }
+            }
+            short len = (((short) len1)<<8) | len2;
+
+            char word[len];
+            bytes_receive = 0;
+            while (bytes_receive < len) {
+                s = socket_receive(&socket, &word[bytes_receive], sizeof(char));
+                if (s == -1) {
+                    printf("Error: %s\n", strerror(errno));
+                } else {
+                    bytes_receive += 1;
+                }
+            }           
+            int b = (int) attemp & 0x80;
+            int a = (int) attemp & 0x7F;
+            if (b != 0) {
+                if (a == 0){
+                    printf("Perdiste! La palabra secreta era: '%s'\n", word);
+                    playing = false;
+                    break;
+                    
+                } else{
+                    printf("Ganaste!!\n");
+                    playing = false;
+                    break;
+                    
+                }
+
+            }
+            
+
+
+            printf("Palabra secreta: %s\n", word);
+            printf("Te quedan %d intentos\n", a);
+            printf("Ingrese letra:");
+        }
     }
-    close(skt);                                                                                                    
-    printf("CLIENT SOCKET CLOSED\n");
+    socket_uninit(&socket);                     
 
     return 0;
 }

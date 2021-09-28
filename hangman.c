@@ -18,6 +18,7 @@ int hangman_uninit(hangman_t *self) {
         game_t game;
         game_uninit(&self->games[i]);
     }
+    fclose(self->stream);
     return 0;
 }
 

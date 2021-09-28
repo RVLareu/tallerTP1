@@ -24,6 +24,7 @@ int socket_init(socket_t *self, struct addrinfo *ptr){
         return 1;
     }
     return 0;
+
 }
 void socket_uninit(socket_t *self) {
     shutdown(self->fd, SHUT_RDWR);
@@ -50,7 +51,7 @@ int socket_accept(socket_t *listener, socket_t *peer) {
     peer->fd = accept(listener->fd, NULL, NULL);
     if (peer->fd == -1) {
         printf("Error: %s\n", strerror(errno));
-        return -1;
+        return 1;
     }
     return 0;
 }

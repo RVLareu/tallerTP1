@@ -6,14 +6,26 @@
 #define END_GAME_LOSS 2
 #define END_GAME_WIN 3
 
+/*
+
+int main(int args, char*argv[]) {
+    game_t game;
+    game_init(&game, "hola ", 5, 0);
+    int s = game_guessLetter(&game, 'h');
+    s = game_guessLetter(&game, 'o');
+    s = game_guessLetter(&game, 'l');
+    s = game_guessLetter(&game, 'z');
+    game_getDisplayWord(&game);
+    game_uninit(&game);
+}
+*/
+
 int game_init(game_t *self, char *word, int attemps, int id) {
-    strtok(word, "\n");
     self->word = word;
     self->attemps = attemps;
     self->id = id;
     int lenWord = strlen(word);
-    //ESTO HACE QUILOMBO EN VALGRIND
-    self->displayWord = (char *)malloc(sizeof(char)*lenWord);
+    self->displayWord = calloc(sizeof(char), lenWord + 1);
     for (int i = 0; i < lenWord; i++ ) {
         self->displayWord[i] = '_';
     }
@@ -59,4 +71,5 @@ int game_getAttempsLeft(game_t *self) {
 
 char *game_getDisplayWord(game_t *self) {
     return self->displayWord;
+
 }

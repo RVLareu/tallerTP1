@@ -1,6 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "lineReader.h"
+
+/*
+int main(int argc, char* argv[]) {
+    lineReader_t lineReader;
+    lineReader_init(&lineReader, fopen(argv[1],"r"));
+    lineReader_readLine(&lineReader);
+    char * line = lineReader_sendLine(&lineReader);
+    line[strlen(line)-1] = '\0';
+    printf("%s", line);
+}
+*/
 
 int lineReader_init(lineReader_t *self, FILE *stream) {
     self->stream = stream;
@@ -15,7 +27,10 @@ int lineReader_uninit(lineReader_t *self) {
 }
 
 int lineReader_readLine(lineReader_t *self) {
-    return getline(&self->line, &self->len, self->stream);
+    int s = getline(&self->line, &self->len, self->stream);
+    self->line[strlen(self->line)-1] = '\0';
+    return s;
+    
     
 }
 
