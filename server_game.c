@@ -10,16 +10,16 @@
 
 int main(int args, char*argv[]) {
     game_t game;
-    game_init(&game, "hola ", 5, 0);
+    game_init(&game, "hola", 5, 0);
     int s = game_guessLetter(&game, 'h');
     s = game_guessLetter(&game, 'o');
     s = game_guessLetter(&game, 'l');
     s = game_guessLetter(&game, 'z');
-    game_getDisplayWord(&game);
+    printf("%s",game_getDisplayWord(&game));
     game_uninit(&game);
 }
-*/
 
+*/
 int game_init(game_t *self, char *word, int attemps, int id) {
     self->word = word;
     self->attemps = attemps;
@@ -53,8 +53,7 @@ int game_guessLetter(game_t *self, char letter) {
         if (self->attemps == 0) {
             return END_GAME_LOSS;
         }
-    }
-    if (present == 1 && strchr(self->displayWord, '_') == NULL) {
+    }else if (present == 1 && strchr(self->displayWord, '_') == NULL) {
         return END_GAME_WIN;
     }
     return present;

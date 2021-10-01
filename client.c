@@ -1,210 +1,124 @@
 
-#include <sys/types.h>                                                                                                   
-#include <sys/socket.h>                                                                                              
-#include <netdb.h>                                                                                                          
-#include <string.h>                                                                                                         
-#include <stdio.h>                                                                                                        
-#include <stdlib.h>                                                                                                         
-#include <unistd.h>                                                                                                         
+
+#include <string.h>
+#include <stdio.h>
 #include <errno.h>
+
 #include <stdbool.h>
 
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "socket.h"
 
-
 int main(int argc, char* argv[]) {
+    /*---VARIABLES---*/
+    const char *hostname = argv[1];
+    const char *servicename = argv[2];
+    int e = 0;
+    int skt = 0;
 
-    /*------VARIABLES socket--------*/
-    int s = 0;                                                                           
-    int skt;
+    bool are_we_connected = false;
     bool is_there_a_socket_error = false;
+
     struct addrinfo hints;
-    struct addrinfo *result;                                                                                          
-    struct addrinfo *ptr;
-    char *port = argv[1];
-    char *node = argv[2];
+    struct addrinfo *result, *ptr;
 
-    /*------GETADDRINFO--------*/
-    memset(&hints, 0, sizeof(struct addrinfo));                                                                                                                                                             
-    hints.ai_family = AF_INET;                                                                                             
-    hints.ai_socktype = SOCK_STREAM;                                                                                       
-                                                                                         
-    s = getaddrinfo(node, port, &hints, &result);
-    if (s != 0) {
-      printf("Error in getaddrinfo: %s\n", gai_strerror(s));
-      return 1;
+    /*---GETADDRINFO---*/
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;       
+    hints.ai_socktype = SOCK_STREAM; 
+    hints.ai_flags = 0;
+
+    e = getaddrinfo(hostname, servicename, &hints, &result);   
+    if (e != 0) { 
+        printf("Error in getaddrinfo: %s\n", gai_strerror(e));
+        return 1;
     }
-
-    /*------GETADDRINFO ELIJO DIRECCIÓN--------*/
-    socket_t socket;
-
-    for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {  
-        skt = socket_init(&socket, ptr);                                                    
+    /*---ITERO LISTA GETADDRINFO, SOCKET, CONNECT---*/
+    for (ptr = result; ptr != NULL && are_we_connected == false; ptr = ptr->ai_next) {
+        skt = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
         if (skt == -1) {
             printf("Error: %s\n", strerror(errno));
-        } else{
-            s = socket_connect(&socket, ptr);
-            if (s == -1) {
+        } else {
+            e = connect(skt, ptr->ai_addr, ptr->ai_addrlen);
+            if (e == -1) {
                 printf("Error: %s\n", strerror(errno));
                 close(skt);
             }
-        }                                                                                                                                 
+            are_we_connected = (e != -1);
+        }
     }
+
+    /*---FREE ADDRINFO---*/
     freeaddrinfo(result);
-    printf("CLIENT SOCKET CONNECTED.\n");
 
-    /*------PRIMER MENSAJE DEL SERVIDOR CON JUEGO--------*/
-
-    int bytes_receive = 0;
-    char attemp;
-    while (bytes_receive < 1) {
-        s = socket_receive(&socket, &attemp, sizeof(unsigned char));
-        if (s == -1) {
-            printf("Error: %s\n", strerror(errno));
-        } else {
-            bytes_receive += 1;
-        }
+    /*---NO CONECTÓ A NINGUNO DE LA LISTA---*/
+    if (are_we_connected == false) {
+     return 1;
     }
-    int a = (int) attemp & 0x7F;
+    while (1) {
+    /*---RECEIVE---*/
+        char buf[3] = "";
+        int size = 3;
+        recv_message(skt, buf, size);
+        int attemps = (int) buf[0] & 0x7F;
+        int state = (int)buf[0] & 0x80;
+
+        
+        unsigned short len = 0;
+        memcpy(&len, &buf[1], 2);
+        len = ntohs(len);
+  
+        
+        char *rbuffer = calloc(sizeof(char), len+1);
+        e = recv_message(skt, rbuffer, len);
+
+        if (state == 128) {
+            if (attemps == 0) {
+                printf("Perdiste! La palabra secreta era: '%s'", rbuffer);
+                
+                
+            } else {
+                printf("Ganaste!!");
+            }
+            free(rbuffer);
+            break;
+        }
+        printf("Palabra secreta : %s\n", rbuffer);
+        printf("Te quedan %d intentos\n", attemps);
+        printf("Ingrese letra: ");
+        free(rbuffer);
+
+
+
+        /*---SEND---*/
     
-
-    bytes_receive = 0;
-    char len1;
-    char len2;
-    while (bytes_receive < 1) {
-        s = socket_receive(&socket, &len1, sizeof(char));
-        if (s == -1) {
-            printf("Error: %s\n", strerror(errno));
-        } else {
-            bytes_receive += 1;
-        }
-    }
-    bytes_receive = 0;
-    while (bytes_receive < 1) {
-        s = socket_receive(&socket, &len2, sizeof(char));
-        if (s == -1) {
-            printf("Error: %s\n", strerror(errno));
-        } else {
-            bytes_receive += 1;
-        }
-    }
-    short len = (((short) len1)<<8) | len2;
-
-    char word[len];
-    bytes_receive = 0;
-    while (bytes_receive < len) {
-        s = socket_receive(&socket, &word[bytes_receive], sizeof(char));
-        if (s == -1) {
-            printf("Error: %s\n", strerror(errno));
-        } else {
-            bytes_receive += 1;
-        }
-    }
-    printf("Palabra secreta: %s\n", word);
-    printf("Te quedan %d intentos\n", a);
-    printf("Ingrese letra:");
-
-    /*------SENDING--------*/
-    bool playing = true;
-    while(playing) {
-
         char buffer[1] = "";    
-        int error = scanf("%s", buffer);
-        if (error != 2) {
+        e = scanf("%s", buffer);  
+        if (e != 1) {
             return 1;
-        }
-            
-        
-        
-        for (int i = 0; i < strlen(buffer); i++) {
-            int bytes_sent = 0;
-            while (bytes_sent < 1) {
-                ssize_t s = socket_send(&socket, &buffer[i], sizeof(char));
-                if (s == -1) {
-                    printf("Error: %s\n", strerror(errno));
-                    is_there_a_socket_error = true;
-                }
-                if (is_there_a_socket_error) {
-                    socket_uninit(&socket);  
-                    return 1;
-                } else {
-                    bytes_sent += 1;
-                }
-            }
-
-
-
-
-            char attemp;
-            bytes_receive = 0;
-            while (bytes_receive < 1) {
-                s = socket_receive(&socket, &attemp, sizeof(unsigned char));
-                if (s == -1) {
-                    printf("Error: %s\n", strerror(errno));
-                } else {
-                    bytes_receive += 1;
-                }
-            }
-            bytes_receive = 0;
-            char len1;
-            char len2;
-            while (bytes_receive < 1) {
-                s = socket_receive(&socket, &len1, sizeof(char));
-                if (s == -1) {
-                    printf("Error: %s\n", strerror(errno));
-                } else {
-                    bytes_receive += 1;
-                }
-            }
-            bytes_receive = 0;
-            while (bytes_receive < 1) {
-                s = socket_receive(&socket, &len2, sizeof(char));
-                if (s == -1) {
-                    printf("Error: %s\n", strerror(errno));
-                } else {
-                    bytes_receive += 1;
-                }
-            }
-            short len = (((short) len1)<<8) | len2;
-
-            char word[len];
-            bytes_receive = 0;
-            while (bytes_receive < len) {
-                s = socket_receive(&socket, &word[bytes_receive], sizeof(char));
-                if (s == -1) {
-                    printf("Error: %s\n", strerror(errno));
-                } else {
-                    bytes_receive += 1;
-                }
-            }           
-            int b = (int) attemp & 0x80;
-            int a = (int) attemp & 0x7F;
-            if (b != 0) {
-                if (a == 0){
-                    printf("Perdiste! La palabra secreta era: '%s'\n", word);
-                    playing = false;
-                    break;
-                    
-                } else{
-                    printf("Ganaste!!\n");
-                    playing = false;
-                    break;
-                    
-                }
-
-            }
-            
-
-
-            printf("Palabra secreta: %s\n", word);
-            printf("Te quedan %d intentos\n", a);
-            printf("Ingrese letra:");
+        }      
+        e = send_message(skt, buffer, 1);
+        if (e == -1) {
+            printf("Error: %s\n", strerror(errno));
+            is_there_a_socket_error = true;
+            break;
         }
     }
-    socket_uninit(&socket);                     
+    /*---ASVISA A LA OTRA MAQUINA QUE CIERRA CONEXION---*/
+    shutdown(skt, SHUT_RDWR);
+    close(skt);
 
-    return 0;
-}
-
-
-
+    /*---FINISHING---*/
+    if (is_there_a_socket_error) {
+        return 1;  
+    }
+    else {
+        return 0;
+    }
+}    

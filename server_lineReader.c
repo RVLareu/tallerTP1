@@ -9,8 +9,9 @@ int main(int argc, char* argv[]) {
     lineReader_init(&lineReader, fopen(argv[1],"r"));
     lineReader_readLine(&lineReader);
     char * line = lineReader_sendLine(&lineReader);
-    line[strlen(line)-1] = '\0';
     printf("%s", line);
+    lineReader_uninit(&lineReader);
+
 }
 */
 
@@ -23,6 +24,7 @@ int lineReader_init(lineReader_t *self, FILE *stream) {
 
 int lineReader_uninit(lineReader_t *self) {
     free(self->line);
+    fclose(self->stream);
     return 0; 
 }
 
