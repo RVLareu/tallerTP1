@@ -47,7 +47,6 @@ int hangman_init(hangman_t *self, FILE *stream) {
 
 int hangman_uninit(hangman_t *self) {
     for (int i = 0; i < self->positionInArray; i++) {
-        printf("ENTRO");
         game_uninit(&self->games[i]);
     }
     lineReader_uninit(&self->lineReader);
