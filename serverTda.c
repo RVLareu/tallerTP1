@@ -5,7 +5,7 @@
 
 
 void server_init(server_t *self, const char *servicename, FILE *stream) {
-    
+    //
     socket_init(&self->socket);
     socket_bind_and_listen(&self->socket, NULL, servicename);
     hangman_init(&self->hangman, stream);
@@ -40,7 +40,8 @@ char* server_create_message_len(server_t *self, bool end_game, char *buffer) {
 }
 
 bool server_guess_hangman_letter(server_t *self, char* buffer) {
-    int guess =  hangman_guessLetter(&self->hangman, hangman_getActualGameID(&self->hangman), buffer[0]);
+    int game_id = hangman_getActualGameID(&self->hangman);
+    int guess =  hangman_guessLetter(&self->hangman, game_id, buffer[0]);
     if (guess == 2 || guess == 3) {
         return true;
     }
@@ -54,10 +55,16 @@ void server_print_recap(server_t *self) {
 }
 
 
-int server_send_message(server_t *self, socket_t *peerskt, char* buffer, size_t lenght) {
+int server_send_message(server_t *self,
+                         socket_t *peerskt,
+                             char* buffer,
+                                 size_t lenght) {
     return socket_send(peerskt, buffer, lenght);
 }
 
-int server_receive_message(server_t *self, socket_t *peerskt, char* buffer, size_t lenght) {
+int server_receive_message(server_t *self,
+                             socket_t *peerskt,
+                                 char* buffer,
+                                     size_t lenght) {
     return socket_receive(peerskt, buffer, lenght);
 }

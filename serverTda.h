@@ -22,7 +22,12 @@ bool server_guess_hangman_letter(server_t *self, char* buffer);
 
 void server_print_recap(server_t *self);
 
-int server_send_message(server_t *self, socket_t *peerskt, char* buffer, size_t lenght);
+int server_send_message(server_t *self,
+                             socket_t *peerskt,
+                                 char* buffer,
+                                  size_t lenght);
 
-int server_receive_message(server_t *self, socket_t *peerskt, char* buffer, size_t lenght);
-
+int server_receive_message(server_t *self,
+                             socket_t *peerskt,
+                                 char* buffer,
+                                     size_t lenght);

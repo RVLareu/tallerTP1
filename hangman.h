@@ -3,14 +3,12 @@
 #include "lineReader.h"
 
 typedef struct {
-
     int victories;
     int defeats;
     int positionInArray;
-    game_t games[1000];
+    game_t games[1000]; // recorrer file hasta final contando lineas
     FILE* stream;
     lineReader_t lineReader;
-     
 } hangman_t;
 
 

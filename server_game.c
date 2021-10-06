@@ -26,7 +26,7 @@ int game_init(game_t *self, char *word, int attemps, int id) {
     self->id = id;
     int lenWord = strlen(word);
     self->displayWord = calloc(sizeof(char), lenWord + 1);
-    for (int i = 0; i < lenWord; i++ ) {
+    for (int i = 0; i < lenWord; i++) {
         self->displayWord[i] = '_';
     }
     return 0;
@@ -39,11 +39,9 @@ int game_uninit(game_t *self) {
 
 int game_guessLetter(game_t *self, char letter) {
     int present = 0;
-    for(int i = 0; i < strlen(self->word); i++) {
+    for (int i = 0; i < strlen(self->word); i++) {
         if (self->word[i] == letter) {
-            
             present = 1;
-  
             self->displayWord[i] = letter;
         }
     }
@@ -70,5 +68,4 @@ int game_getAttempsLeft(game_t *self) {
 
 char *game_getDisplayWord(game_t *self) {
     return self->displayWord;
-
 }

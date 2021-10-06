@@ -54,8 +54,6 @@ int hangman_uninit(hangman_t *self) {
 }
 
 int hangman_createGame(hangman_t *self, int attemps) {
-    
-
     int err = lineReader_readLine(&self->lineReader);
     if (err == -1) {
         return -1;
@@ -63,7 +61,6 @@ int hangman_createGame(hangman_t *self, int attemps) {
         game_t game;
         char* line = lineReader_sendLine(&self->lineReader);
         game_init(&game, line, attemps, self->positionInArray);
-
         self->games[self->positionInArray] = game;
         self->positionInArray = self->positionInArray + 1;
         return 0;
@@ -71,15 +68,12 @@ int hangman_createGame(hangman_t *self, int attemps) {
 }
 
 int hangman_guessLetter(hangman_t *self, int gameID, char letter) {
-    
     int guess = game_guessLetter(&self->games[gameID], letter);
     if (guess == 2) {
-
         self->defeats ++;
     } else if (guess == 3) {
         self->victories ++;
     }
-
     return guess;
 }
 

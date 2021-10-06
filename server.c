@@ -32,13 +32,13 @@ int main(int argc, char* argv[]) {
         bool end_game = false;
         
         char len[3];
-        char* display_word = server_create_message_len(&server, end_game, len);
+        char* disp_w = server_create_message_len(&server, end_game, len);
         e = server_send_message(&server, &peerskt, len, 3);
         if (e == -1) {
             printf("Error: %s\n", strerror(errno));
             break;
         }
-        e = server_send_message(&server, &peerskt, display_word, strlen(display_word));
+        e = server_send_message(&server, &peerskt, disp_w, strlen(disp_w));
         if (e == -1) {
             printf("Error: %s\n", strerror(errno));
             break;
@@ -59,19 +59,18 @@ int main(int argc, char* argv[]) {
             }
   
             char len[3];
-            char* display_word = server_create_message_len(&server, end_game, len);
+            char* disp_w = server_create_message_len(&server, end_game, len);
             e = server_send_message(&server, &peerskt, len, 3);
             if (e == -1) {
                 printf("Error: %s\n", strerror(errno));
                 break;
             }
-            e = server_send_message(&server, &peerskt, display_word, strlen(display_word));
+            e = server_send_message(&server, &peerskt, disp_w, strlen(disp_w));
             if (e == -1) {
                 printf("Error: %s\n", strerror(errno));
                 break;
             }
         }
-
     }
         
               

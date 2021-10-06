@@ -31,9 +31,7 @@ int lineReader_uninit(lineReader_t *self) {
 int lineReader_readLine(lineReader_t *self) {
     int s = getline(&self->line, &self->len, self->stream);
     self->line[strlen(self->line)-1] = '\0';
-    return s;
-    
-    
+    return s; 
 }
 
 char *lineReader_sendLine(lineReader_t *self) {

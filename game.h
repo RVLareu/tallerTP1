@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-
 typedef struct {
     char* word;
     char* displayWord;
@@ -10,6 +9,7 @@ typedef struct {
 
 
 int game_init(game_t *self, char *word, int attemps, int id);
+
 int game_uninit(game_t *self);
 
 int game_guessLetter(game_t *self, char letter);
