@@ -10,11 +10,10 @@
 
 void socket_init(socket_t *self) {
     self->fd = socket(AF_INET, SOCK_STREAM, 0);
-    /*    if (skt == -1) {
+    if (self->fd == -1) {
         printf("Error: %s\n", strerror(errno));
-        freeaddrinfo(ptr);
-        return 1;
-    }*/
+        close(self->fd);
+    }
 }
 
 void socket_uninit(socket_t *self) {
@@ -29,7 +28,7 @@ void socket_bind_and_listen(socket_t *self,
     int e = 0;
     int val = 1;
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;        
+    hints.ai_family = AF_UNSPEC;        
     hints.ai_socktype = SOCK_STREAM; 
     hints.ai_flags = AI_PASSIVE;
     e = getaddrinfo(host, service, &hints, &ptr);
@@ -81,7 +80,7 @@ void socket_connect(socket_t *self, const char *host, const char *service) {
 
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;       
+    hints.ai_family = AF_UNSPEC;       
     hints.ai_socktype = SOCK_STREAM; 
     hints.ai_flags = 0;
 
@@ -95,6 +94,7 @@ void socket_connect(socket_t *self, const char *host, const char *service) {
         self->fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
         if (self->fd == -1) {
             printf("Error: %s\n", strerror(errno));
+            close(self->fd);
         } else {
             e = connect(self->fd, ptr->ai_addr, ptr->ai_addrlen);
             if (e == -1) {
@@ -103,7 +103,8 @@ void socket_connect(socket_t *self, const char *host, const char *service) {
             }
             connected = (e != -1);
             if (connected == false) {
-                //return 1;
+                printf("Error: %s\n", strerror(errno));
+                close(self->fd);
             }
         }
     }
@@ -112,10 +113,10 @@ void socket_connect(socket_t *self, const char *host, const char *service) {
 
 ssize_t socket_send(socket_t *self, const char *buffer, size_t length){
     int sent = 0;
-    int s = 0;
     bool is_the_socket_valid = true;
 
     while (sent < length && is_the_socket_valid) {
+        int s = 0;
         s = send(self->fd, &buffer[sent], sizeof(char), MSG_NOSIGNAL);
 
         if (s == 0) {
@@ -135,10 +136,10 @@ ssize_t socket_send(socket_t *self, const char *buffer, size_t length){
 }
 ssize_t socket_receive(socket_t *self, char *buffer, size_t length){
     int received = 0;
-    int s = 0;
     bool is_the_socket_valid = true;
 
     while (received < length && is_the_socket_valid) {
+        int s = 0;
         s = recv(self->fd, &buffer[received], sizeof(char), 0);
 
         if (s == 0) { 

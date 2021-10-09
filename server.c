@@ -17,35 +17,31 @@ int main(int argc, char* argv[]) {
     const char *servicename = argv[1];
     int attemps_for_client = atoi(argv[2]);
     FILE *stream = fopen(argv[3], "r");
-    int e = 0;
-
     server_t server;
     server_init(&server, servicename, stream);
-
+    socket_t peerskt;
     while (1) {
+        int e = 0;
         e = server_create_game(&server, attemps_for_client);
         if (e == -1) {
             break;
         }
-        socket_t peerskt;
+        
         server_accept_client(&server, &peerskt);
         bool end_game = false;
         
-        char len[3];
-        char* disp_w = server_create_message_len(&server, end_game, len);
-        e = server_send_message(&server, &peerskt, len, 3);
+        char len_fm[3];
+        char* wo_fm = server_create_message_len(&server, end_game, len_fm);
+        e = server_send_message(&server, &peerskt, len_fm, 3);
         if (e == -1) {
             printf("Error: %s\n", strerror(errno));
             break;
         }
-        e = server_send_message(&server, &peerskt, disp_w, strlen(disp_w));
+        e = server_send_message(&server, &peerskt, wo_fm, strlen(wo_fm));
         if (e == -1) {
             printf("Error: %s\n", strerror(errno));
             break;
         }
-
-
-        
         while (!end_game) {
             char rec_buff[1];
             e = server_receive_message(&server, &peerskt, rec_buff, 1);
@@ -70,12 +66,11 @@ int main(int argc, char* argv[]) {
                 printf("Error: %s\n", strerror(errno));
                 break;
             }
+            if (end_game) {
+                socket_uninit(&peerskt);
+            }
         }
     }
-        
-              
-    
-
     server_print_recap(&server);
     server_uninit(&server);
 

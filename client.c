@@ -13,52 +13,30 @@
 #include <unistd.h>
 
 #include <stdlib.h>
-
-#include "socket.h"
+#include "clientTda.h"
 
 int main(int argc, char* argv[]) {
-    /*---VARIABLES---*/
     const char *hostname = argv[1];
     const char *servicename = argv[2];
-    int e = 0;
-    //int skt = 0;
-
-    //bool are_we_connected = false;
     bool is_there_a_socket_error = false;
 
-    socket_t socket;
-    socket_init(&socket);
-    socket_connect(&socket,hostname, servicename);
+    client_t client;
+    client_init_connect(&client, hostname, servicename);
+    char buf_first_message[3] = "";
+    int size_first_m = 3;
+    client_receive_process(&client, buf_first_message, size_first_m, 0);
 
-
-    char buf[3] = "";
-    int size = 3;
-    socket_receive(&socket, buf, size);
-    int attemps = (int) buf[0] & 0x7F;
-
-    
-    unsigned short len = 0;
-    memcpy(&len, &buf[1], 2);
-    len = ntohs(len);
-
-    
-    char *rbuffer = calloc(sizeof(char), len+1);
-    e = socket_receive(&socket, rbuffer, len);
-    printf("Palabra secreta: %s\n", rbuffer);
-    printf("Te quedan %d intentos\n", attemps);
-    printf("Ingrese letra: ");
-    free(rbuffer);
     bool end_game = false;
-    while (!end_game) {
+    while (!end_game && !is_there_a_socket_error) {
         /*---SEND---*/
-    
         char buffer[30] = "";    //widht
-        e = scanf("%s", buffer);  
+        int e = scanf("%29s", buffer);  
         if (e != 1) {
+            client_uninit(&client);
             return 1;
         }
         for (int i = 0; i < strlen(buffer) && !end_game; i++) {
-            e = socket_send(&socket, &buffer[i], 1);
+            e = client_send(&client, &buffer[i], 1);
             if (e == -1) {
                 printf("Error: %s\n", strerror(errno));
                 is_there_a_socket_error = true;
@@ -68,40 +46,14 @@ int main(int argc, char* argv[]) {
             /*---RECEIVE---*/
             char buf[3] = "";
             int size = 3;
-            socket_receive(&socket, buf, size);
-            int attemps = (int) buf[0] & 0x7F;
-            int state = (int)buf[0] & 0x80;
-
-            
-            unsigned short len = 0;
-            memcpy(&len, &buf[1], 2);
-            len = ntohs(len);
-    
-            
-            char *rbuffer = calloc(sizeof(char), len+1);
-            e = socket_receive(&socket, rbuffer, len);
-
-            if (state == 128) {
-                if (attemps == 0) {
-                    printf("\nPerdiste! La palabra secreta era: '%s'", rbuffer);
-                
-                    
-                } else {
-                    printf("\nGanaste!!");
-                }
+            if (client_receive_process(&client, buf, size, 1)) {
                 end_game = true;
-                free(rbuffer);
+                client_uninit(&client);
                 break;
             }
-            printf("\nPalabra secreta: %s\n", rbuffer);
-            printf("Te quedan %d intentos\n", attemps);
-            printf("Ingrese letra: ");
-            free(rbuffer);
-            }
+        }
     }
-    /*---ASVISA A LA OTRA MAQUINA QUE CIERRA CONEXION---*/
-    socket_uninit(&socket);
-
+    client_uninit(&client);
     /*---FINISHING---*/
     if (is_there_a_socket_error) {
         return 1;  
