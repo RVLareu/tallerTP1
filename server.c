@@ -13,6 +13,7 @@
 #include "socket.h"
 #include "serverTda.h"
 
+/*main app from server side*/
 int main(int argc, char* argv[]) {
     const char *servicename = argv[1];
     int attemps_for_client = atoi(argv[2]);
@@ -20,6 +21,8 @@ int main(int argc, char* argv[]) {
     server_t server;
     server_init(&server, servicename, stream);
     socket_t peerskt;
+
+    /*MAIN LOOP: creates game and accepts playes*/
     while (1) {
         int e = 0;
         e = server_create_game(&server, attemps_for_client);
@@ -29,19 +32,22 @@ int main(int argc, char* argv[]) {
         
         server_accept_client(&server, &peerskt);
         bool end_game = false;
-        
+        /*first message to player*/
         char len_fm[3];
         char* wo_fm = server_create_message_len(&server, end_game, len_fm);
+        /*sends first 3 bytes*/
         e = server_send_message(&server, &peerskt, len_fm, 3);
         if (e == -1) {
             printf("Error: %s\n", strerror(errno));
             break;
         }
+        /*sends display word*/
         e = server_send_message(&server, &peerskt, wo_fm, strlen(wo_fm));
         if (e == -1) {
             printf("Error: %s\n", strerror(errno));
             break;
         }
+        /*INGAME LOOP: only breaks when game ends or client disconects*/
         while (!end_game) {
             char rec_buff[1];
             e = server_receive_message(&server, &peerskt, rec_buff, 1);
@@ -73,11 +79,5 @@ int main(int argc, char* argv[]) {
     }
     server_print_recap(&server);
     server_uninit(&server);
-
-    /*if (is_the_accept_socket_valid) {
-        return 1;
-    }
-    else {*/
-        return 0;
-    //}
+    return 0;
 }

@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "clientTda.h"
 
+/*main app from clients side*/
 int main(int argc, char* argv[]) {
     const char *hostname = argv[1];
     const char *servicename = argv[2];
@@ -22,20 +23,23 @@ int main(int argc, char* argv[]) {
 
     client_t client;
     client_init_connect(&client, hostname, servicename);
+    /*firs message from server*/
     char buf_first_message[3] = "";
     int size_first_m = 3;
     client_receive_process(&client, buf_first_message, size_first_m, 0);
 
     bool end_game = false;
+    /*INGAME LOOP*/
     while (!end_game && !is_there_a_socket_error) {
-        /*---SEND---*/
-        char buffer[30] = "";    //widht
+        /*input from player*/
+        char buffer[30] = "";
         int e = scanf("%29s", buffer);  
         if (e != 1) {
             client_uninit(&client);
             return 1;
         }
         for (int i = 0; i < strlen(buffer) && !end_game; i++) {
+            /*---SEND---*/
             e = client_send(&client, &buffer[i], 1);
             if (e == -1) {
                 printf("Error: %s\n", strerror(errno));
@@ -54,7 +58,7 @@ int main(int argc, char* argv[]) {
         }
     }
     client_uninit(&client);
-    /*---FINISHING---*/
+    
     if (is_there_a_socket_error) {
         return 1;  
     } else {

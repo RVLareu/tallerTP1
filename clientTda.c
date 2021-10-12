@@ -1,18 +1,18 @@
 #include "clientTda.h"
 
-
-
-void client_uninit(client_t *self) {
-    socket_uninit(&self->socket);
-}
-
-
+/*initiates client and connects it to server*/
 void client_init_connect(client_t *self,
                      const char *hostname,
                          const char *servicename) {
     socket_connect(&self->socket, hostname, servicename);
 }
-
+/*destroys client*/
+void client_uninit(client_t *self) {
+    socket_uninit(&self->socket);
+}
+/*receives a message from server, process it and
+prints result from it.
+*/
 int client_receive_process(client_t *self,
                              char* buffer,
                                  size_t size,
@@ -47,7 +47,7 @@ int client_receive_process(client_t *self,
 }
 
 
-
+/*sends a message*/
 int client_send(client_t *self, char *letter, int size) {
     int e = socket_send(&self->socket, letter, size);
     return e;

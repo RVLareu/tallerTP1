@@ -6,20 +6,7 @@
 #define END_GAME_LOSS 2
 #define END_GAME_WIN 3
 
-/*
-
-int main(int args, char*argv[]) {
-    game_t game;
-    game_init(&game, "hola", 5, 0);
-    int s = game_guessLetter(&game, 'h');
-    s = game_guessLetter(&game, 'o');
-    s = game_guessLetter(&game, 'l');
-    s = game_guessLetter(&game, 'z');
-    printf("%s",game_getDisplayWord(&game));
-    game_uninit(&game);
-}
-
-*/
+/*receives a word, number of attemps and an id. Creates a game*/
 int game_init(game_t *self, char *word, int attemps, int id) {
     self->word = word;
     self->attemps = attemps;
@@ -31,12 +18,16 @@ int game_init(game_t *self, char *word, int attemps, int id) {
     }
     return 0;
 }
-
+/*destroys game, freeing the line used to display a word*/
 int game_uninit(game_t *self) {
     free(self->displayWord);
     return 0;
 }
-
+/*receives a letter and returns:
+    -0 if wrong guess
+    -2 if end game with loss
+    -3 if end game with win    
+*/
 int game_guessLetter(game_t *self, char letter) {
     int present = 0;
     for (int i = 0; i < strlen(self->word); i++) {
@@ -65,7 +56,7 @@ char *game_getWord(game_t *self) {
 int game_getAttempsLeft(game_t *self) {
     return self->attemps;
 }
-
+/*returns the word to display, wich has '_' when the letter has not been guessed yet*/
 char *game_getDisplayWord(game_t *self) {
     return self->displayWord;
 }

@@ -2,40 +2,7 @@
 #include <string.h>
 #include "hangman.h"
 
-
-
-/*
-int main(int argc, char* argv[]) {
-    hangman_t hangman;
-    hangman_init(&hangman, fopen(argv[1], "r"));
-    hangman_createGame(&hangman,5);
-    printf("%s\n",hangman_getDisplayWord(&hangman,0));
-    hangman_guessLetter(&hangman,0,'c');
-    printf("%s\n",hangman_getDisplayWord(&hangman,0));
-    hangman_guessLetter(&hangman,0,'z');
-    printf("%s\n",hangman_getDisplayWord(&hangman,0));
-    hangman_guessLetter(&hangman,0,'s');
-    printf("%s\n",hangman_getDisplayWord(&hangman,0));
-    hangman_guessLetter(&hangman,0,'a');
-    printf("%s\n",hangman_getDisplayWord(&hangman,0));
-
-    hangman_createGame(&hangman,5);
-    printf("%s\n",hangman_getDisplayWord(&hangman,1));
-    hangman_guessLetter(&hangman,1,'h');
-    printf("%s\n",hangman_getDisplayWord(&hangman,1));
-    hangman_guessLetter(&hangman,1,'o');
-    printf("%s\n",hangman_getDisplayWord(&hangman,1));
-    hangman_guessLetter(&hangman,1,'s');
-    printf("%s\n",hangman_getDisplayWord(&hangman,1));
-    hangman_guessLetter(&hangman,1,'a');
-    printf("%s\n",hangman_getDisplayWord(&hangman,1));
-    
-
-    hangman_uninit(&hangman);
-
-}
-
-*/
+/*initiates a hangman with its lineReader and stream*/
 int hangman_init(hangman_t *self, FILE *stream) {
     self->victories = 0;
     self->defeats = 0;
@@ -44,7 +11,7 @@ int hangman_init(hangman_t *self, FILE *stream) {
     lineReader_init(&self->lineReader, stream);
     return 0;
 }
-
+/*destroys hangman, inlcluding lineReader and games y games array*/
 int hangman_uninit(hangman_t *self) {
     for (int i = 0; i < self->positionInArray; i++) {
         game_uninit(&self->games[i]);
@@ -52,7 +19,7 @@ int hangman_uninit(hangman_t *self) {
     lineReader_uninit(&self->lineReader);
     return 0;
 }
-
+/*creates a game and stores it in games arrays. Updates positionInArray*/
 int hangman_createGame(hangman_t *self, int attemps) {
     int err = lineReader_readLine(&self->lineReader);
     if (err == -1) {
@@ -66,7 +33,7 @@ int hangman_createGame(hangman_t *self, int attemps) {
         return 0;
     }
 }
-
+/*guesses a letter from a game, updating defeats or victories if necessary*/
 int hangman_guessLetter(hangman_t *self, int gameID, char letter) {
     int guess = game_guessLetter(&self->games[gameID], letter);
     if (guess == 2) {

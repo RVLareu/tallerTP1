@@ -7,7 +7,7 @@
 #include <errno.h>
 
 #include "socket.h"
-
+/*creates socket with AF_INET, SOCK_STREAM*/
 void socket_init(socket_t *self) {
     self->fd = socket(AF_INET, SOCK_STREAM, 0);
     if (self->fd == -1) {
@@ -15,12 +15,14 @@ void socket_init(socket_t *self) {
         close(self->fd);
     }
 }
-
+/*destroys socket*/
 void socket_uninit(socket_t *self) {
     shutdown(self->fd, SHUT_RDWR);
     close(self->fd);
 }
-
+/*binds socket and is set to listen up to 8. Uses
+getaddrinfo, setsockopt(), bind() and liste()
+*/
 void socket_bind_and_listen(socket_t *self,
                              const char *host,
                                  const char *service) {
@@ -42,7 +44,6 @@ void socket_bind_and_listen(socket_t *self,
         printf("Error: %s\n", strerror(errno));
         close(self->fd);
         freeaddrinfo(ptr);
-        //return 1
     }
 
     e = bind(self->fd, ptr->ai_addr, ptr->ai_addrlen);
@@ -50,7 +51,6 @@ void socket_bind_and_listen(socket_t *self,
         printf("Error: %s\n", strerror(errno));
         close(self->fd);
         freeaddrinfo(ptr);
-        //return 1
     }   
     freeaddrinfo(ptr);
 
@@ -58,26 +58,26 @@ void socket_bind_and_listen(socket_t *self,
     if (e == -1) {
         printf("Error: %s\n", strerror(errno));
         close(self->fd);
-        // return 1
     }
 }
 
-
+/*accepts an incomming socket (peer)*/
 void socket_accept(socket_t *listener, socket_t *peer) {
+    // duda de si rompe encapsulamiento
     peer->fd = accept(listener->fd, NULL, NULL);
     if (peer->fd == -1) {
         printf("Error: %s\n", strerror(errno));
-        // continue_running = false
-        // accept socket_valid = false
+        close(peer->fd);
     }
 }
-
+/*connects to socket (from server). Uses getaddrinfo, socket()
+and connect()
+*/
 void socket_connect(socket_t *self, const char *host, const char *service) {
     int e = 0;
     struct addrinfo hints;
     struct addrinfo *result, *ptr;
     bool connected = false;
-
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;       
@@ -111,14 +111,15 @@ void socket_connect(socket_t *self, const char *host, const char *service) {
     freeaddrinfo(result);
 }
 
+/*sends a buffer char by char. Taken and modified from 
+github.com/Taller-de-Programacion/clases/tree/master/sockets-mdipaola
+*/
 ssize_t socket_send(socket_t *self, const char *buffer, size_t length){
     int sent = 0;
     bool is_the_socket_valid = true;
-
     while (sent < length && is_the_socket_valid) {
         int s = 0;
         s = send(self->fd, &buffer[sent], sizeof(char), MSG_NOSIGNAL);
-
         if (s == 0) {
             is_the_socket_valid = false;
         } else if (s == -1) {
@@ -127,21 +128,21 @@ ssize_t socket_send(socket_t *self, const char *buffer, size_t length){
             sent += s;
         }
     }
-
     if (is_the_socket_valid) {
         return sent;
     } else {
         return -1;
     }
 }
+/*receives a buffer char by char. Taken and modified from 
+github.com/Taller-de-Programacion/clases/tree/master/sockets-mdipaola
+*/
 ssize_t socket_receive(socket_t *self, char *buffer, size_t length){
     int received = 0;
     bool is_the_socket_valid = true;
-
     while (received < length && is_the_socket_valid) {
         int s = 0;
         s = recv(self->fd, &buffer[received], sizeof(char), 0);
-
         if (s == 0) { 
             is_the_socket_valid = false;
         } else if (s == -1) { 
@@ -150,7 +151,6 @@ ssize_t socket_receive(socket_t *self, char *buffer, size_t length){
             received += s;
         }
     }
-
     if (is_the_socket_valid) {
         return received;
     } else {

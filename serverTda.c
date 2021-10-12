@@ -3,19 +3,18 @@
 
 #include "serverTda.h"
 
-
+/*initiates a server, with its socket annd its hangman*/
 void server_init(server_t *self, const char *servicename, FILE *stream) {
-    //
     socket_init(&self->socket);
     socket_bind_and_listen(&self->socket, NULL, servicename);
     hangman_init(&self->hangman, stream);
 }
-
+/*destroys socket and hangman*/
 void server_uninit(server_t *self) {
     hangman_uninit(&self->hangman);
     socket_uninit(&self->socket);
 }
-
+/*creates a game*/
 int server_create_game(server_t *self, int attemps_for_client) {
     return hangman_createGame(&self->hangman, attemps_for_client);
 }
@@ -23,7 +22,11 @@ int server_create_game(server_t *self, int attemps_for_client) {
 void server_accept_client(server_t *self, socket_t *socket_client) {
     socket_accept(&self->socket, socket_client);
 }
-
+/*creates a message to send to the client.
+receives a buffer where it put its first 3 bytes of message and
+returns display_word, correspondig to the rest
+of the message
+*/
 char* server_create_message_len(server_t *self, bool end_game, char *buffer) {
     int game_id = hangman_getActualGameID(&self->hangman);
     char* display_word = hangman_getDisplayWord(&self->hangman, game_id);
@@ -38,7 +41,7 @@ char* server_create_message_len(server_t *self, bool end_game, char *buffer) {
     memcpy(&buffer[0], &attemps, 1);
     return display_word;
 }
-
+/*guesse a letter returning if game has ended or not*/
 bool server_guess_hangman_letter(server_t *self, char* buffer) {
     int game_id = hangman_getActualGameID(&self->hangman);
     int guess =  hangman_guessLetter(&self->hangman, game_id, buffer[0]);
@@ -47,21 +50,21 @@ bool server_guess_hangman_letter(server_t *self, char* buffer) {
     }
     return false;
 }
-
+/*prints recap of victories and defeats*/
 void server_print_recap(server_t *self) {
     printf("Resumen:\n");
     printf("\tVictorias: %d\n",hangman_getVictories(&self->hangman));
     printf("\tDerrotas: %d\n",hangman_getDefeats(&self->hangman));
 }
 
-
+/*sends message*/
 int server_send_message(server_t *self,
                          socket_t *peerskt,
                              char* buffer,
                                  size_t lenght) {
     return socket_send(peerskt, buffer, lenght);
 }
-
+/*receives a message*/
 int server_receive_message(server_t *self,
                              socket_t *peerskt,
                                  char* buffer,
