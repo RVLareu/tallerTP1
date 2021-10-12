@@ -18,9 +18,17 @@ Tanto para el cliente como para el servidor, se hicieron de tal manera de poder 
 
 ![](/classdiagram)
 
-#Comunicacíon
+# Comunicacíon
 </br>
 Luego de realizarse la conexion entre el servidor y el cliente, el primero le envía al segundo el estado actual de la partida (en este caso para que el jugador tenga conocimiento de la misma). A partir de este punto se ingresa en un ciclo donde el cliente envía una letra (el jugador puede envíar más de una pero el procesamiento es de a letras) al servidor, este la procesa en el juego y envía el estado actualizado
 
 ![](/serverinitgame.png)
 ![](/game.png)
+
+# Decisiones
+
+</br>
+
+Algo a tener en cuenta era la representación del estado del juego al jugador, que implicaba tener la palabra con ' _ ' en los lugares donde no se sabía aún la letra correspondiente. Esto de resolvió en la clase *game*, la cual contiene tanto la palabra completa como la palabra a presentarle al jugador o *display word*, la cual está compuesta por guiones bajos y letras.
+
+Otra decisión fue la de tener una clase *hangman* la cual pudiera tener varias partidas, permitiendo resolver fácilmente la impresión del lado del servidor del resumen de las partidas jugadas. Si se detectaba que un juego finalizaba, se identificaba el resultado y previo a enviar el estado de juego al servidor se actualizaban las victorias y derrotas.
